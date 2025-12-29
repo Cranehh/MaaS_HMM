@@ -68,7 +68,7 @@ def preprocess_data(df):
     """
     
     data = df.copy()
-    
+    data['cost'] = data['cost'].replace(to_replace=[1,2,3,4,5,6],value=[0,0,1,1,1,1])
     # ========== 1. 因变量处理 ==========
     
     # 阶段1: maas选择 (1=不转移, 4-7=MaaS选项)
@@ -93,102 +93,102 @@ def preprocess_data(df):
     # --- 2.1 套餐与出行模式匹配度 ---
     # 基于用户的出行模式偏好和套餐特征计算匹配度
     
-    # Bus First套餐匹配度: 高频公交用户匹配度高
-    data['match_bus_first'] = (
-        data['week_bus'] * 0.4 +          # 公交使用频率
-        data['a6'] * 0.3 +                 # 公交偏好
-        (1 - data['have_car']) * 0.3      # 无车用户
-    )
+    # # Bus First套餐匹配度: 高频公交用户匹配度高
+    # data['match_bus_first'] = (
+    #     data['week_bus'] * 0.4 +          # 公交使用频率
+    #     data['a6'] * 0.3 +                 # 公交偏好
+    #     (1 - data['have_car']) * 0.3      # 无车用户
+    # )
     
-    # Metro Access套餐匹配度: 高频地铁用户匹配度高
-    data['match_metro_access'] = (
-        data['week_metro'] * 0.4 +         # 地铁使用频率
-        data['travel_distance_work'] * 0.3 + # 工作日通勤距离
-        data['c7'] * 0.3                    # 多模式组合偏好
-    )
+    # # Metro Access套餐匹配度: 高频地铁用户匹配度高
+    # data['match_metro_access'] = (
+    #     data['week_metro'] * 0.4 +         # 地铁使用频率
+    #     data['travel_distance_work'] * 0.3 + # 工作日通勤距离
+    #     data['c7'] * 0.3                    # 多模式组合偏好
+    # )
     
-    # Value Taxi套餐匹配度: 出租车/网约车用户匹配度高
-    data['match_value_taxi'] = (
-        data['week_taxi'] * 0.4 +          # 出租车使用频率
-        data['b6'] * 0.3 +                 # 出租车偏好
-        data['travel_distance_weekend'] * 0.3  # 周末出行距离
-    )
+    # # Value Taxi套餐匹配度: 出租车/网约车用户匹配度高
+    # data['match_value_taxi'] = (
+    #     data['week_taxi'] * 0.4 +          # 出租车使用频率
+    #     data['b6'] * 0.3 +                 # 出租车偏好
+    #     data['travel_distance_weekend'] * 0.3  # 周末出行距离
+    # )
     
-    # Ultra Access套餐匹配度: 多模式重度用户
-    data['match_ultra_access'] = (
-        (data['week_metro'] + data['week_taxi'] + data['week_ebike']) / 3 * 0.4 +
-        data['cost'] * 0.3 +              # 高出行花费
-        data['travel_num'] * 0.3          # 高出行频率
-    )
+    # # Ultra Access套餐匹配度: 多模式重度用户
+    # data['match_ultra_access'] = (
+    #     (data['week_metro'] + data['week_taxi'] + data['week_ebike']) / 3 * 0.4 +
+    #     data['cost'] * 0.3 +              # 高出行花费
+    #     data['travel_num'] * 0.3          # 高出行频率
+    # )
     
-    # 综合匹配度 (取最大匹配度)
-    data['bundle_match'] = data[['match_bus_first', 'match_metro_access', 
-                                  'match_value_taxi', 'match_ultra_access']].max(axis=1)
+    # # 综合匹配度 (取最大匹配度)
+    # data['bundle_match'] = data[['match_bus_first', 'match_metro_access', 
+    #                               'match_value_taxi', 'match_ultra_access']].max(axis=1)
     
-    # --- 2.2 MaaS性价比感知 ---
-    # 基于套餐价格与日常出行花费的比较
+    # # --- 2.2 MaaS性价比感知 ---
+    # # 基于套餐价格与日常出行花费的比较
     
-    # 套餐平均价格 (根据选择的情景)
-    data['avg_bundle_price'] = (data['price1'] + data['price2'] + 
-                                 data['price3'] + data['price4']) / 4 * 100  # 还原缩放
+    # # 套餐平均价格 (根据选择的情景)
+    # data['avg_bundle_price'] = (data['price1'] + data['price2'] + 
+    #                              data['price3'] + data['price4']) / 4 * 100  # 还原缩放
     
-    # 性价比 = 日常花费 / 套餐价格 (值越大性价比越高)
-    # 使用cost作为日常花费的代理
-    cost_mapping = {0: 100, 1: 300}  # 0=150以下, 1=150以上
-    data['monthly_cost_proxy'] = data['cost'].map(cost_mapping).fillna(200)
+    # # 性价比 = 日常花费 / 套餐价格 (值越大性价比越高)
+    # # 使用cost作为日常花费的代理
+    # cost_mapping = {0: 100, 1: 300}  # 0=150以下, 1=150以上
+    # data['monthly_cost_proxy'] = data['cost'].map(cost_mapping).fillna(200)
     
-    # 标准化的性价比指标
-    data['price_value_ratio'] = (data['monthly_cost_proxy'] - data['avg_bundle_price']) / 100
-    data['price_value_ratio'] = data['price_value_ratio'].clip(-2, 2)  # 截断极值
+    # # 标准化的性价比指标
+    # data['price_value_ratio'] = (data['monthly_cost_proxy'] - data['avg_bundle_price']) / 100
+    # data['price_value_ratio'] = data['price_value_ratio'].clip(-2, 2)  # 截断极值
     
-    # --- 2.3 第一阶段体验满意度代理 ---
-    # 基于MaaS选项与原有方式的时间/价格差异
+    # # --- 2.3 第一阶段体验满意度代理 ---
+    # # 基于MaaS选项与原有方式的时间/价格差异
     
-    # 如果选择了MaaS，计算相对于原方式的改善程度
-    # 时间节省 (负值表示MaaS更快)
-    data['time_saving'] = np.where(
-        data['first_pt'] == 1,
-        (data['M1triptime'] + data['M2triptime']) / 2 - data['C1triptimePT'],
-        np.where(
-            data['first_taxi'] == 1,
-            (data['M3triptime'] + data['M4ttime']) / 2 - data['B1triptime'],
-            (data['M4ttime'] - data['A1ttimeCar'])
-        )
-    )
-    data['time_saving'] = -data['time_saving'] / 10  # 标准化，正值表示节省时间
+    # # 如果选择了MaaS，计算相对于原方式的改善程度
+    # # 时间节省 (负值表示MaaS更快)
+    # data['time_saving'] = np.where(
+    #     data['first_pt'] == 1,
+    #     (data['M1triptime'] + data['M2triptime']) / 2 - data['C1triptimePT'],
+    #     np.where(
+    #         data['first_taxi'] == 1,
+    #         (data['M3triptime'] + data['M4ttime']) / 2 - data['B1triptime'],
+    #         (data['M4ttime'] - data['A1ttimeCar'])
+    #     )
+    # )
+    # data['time_saving'] = -data['time_saving'] / 10  # 标准化，正值表示节省时间
     
-    # 价格节省
-    data['price_saving'] = np.where(
-        data['first_pt'] == 1,
-        (data['M1price'] + data['M2price']) / 2 - data['C1pricePT'],
-        np.where(
-            data['first_taxi'] == 1,
-            (data['M3price'] + data['M4price']) / 2 - data['B1priceTaxi'],
-            (data['M4price'] - data['A1priceCar'])
-        )
-    )
-    data['price_saving'] = -data['price_saving'] / 10  # 标准化，正值表示省钱
+    # # 价格节省
+    # data['price_saving'] = np.where(
+    #     data['first_pt'] == 1,
+    #     (data['M1price'] + data['M2price']) / 2 - data['C1pricePT'],
+    #     np.where(
+    #         data['first_taxi'] == 1,
+    #         (data['M3price'] + data['M4price']) / 2 - data['B1priceTaxi'],
+    #         (data['M4price'] - data['A1priceCar'])
+    #     )
+    # )
+    # data['price_saving'] = -data['price_saving'] / 10  # 标准化，正值表示省钱
     
-    # 综合满意度代理
-    data['trial_satisfaction'] = 0.5 * data['time_saving'] + 0.5 * data['price_saving']
-    data['trial_satisfaction'] = data['trial_satisfaction'].clip(-2, 2)
+    # # 综合满意度代理
+    # data['trial_satisfaction'] = 0.5 * data['time_saving'] + 0.5 * data['price_saving']
+    # data['trial_satisfaction'] = data['trial_satisfaction'].clip(-2, 2)
     
-    # ========== 3. 变量缩放 ==========
+    # # ========== 3. 变量缩放 ==========
     
-    # 时间变量缩放 (除以10)
-    time_vars = ['M1triptime', 'M2triptime', 'M3triptime', 'M4ttime',
-                 'M1ttimerail', 'M2ttime_rail', 'M3ttime_rail',
-                 'C1triptimePT', 'B1triptime', 'A1ttimeCar']
-    for var in time_vars:
-        if var in data.columns:
-            data[var + '_scaled'] = data[var] / 10
+    # # 时间变量缩放 (除以10)
+    # time_vars = ['M1triptime', 'M2triptime', 'M3triptime', 'M4ttime',
+    #              'M1ttimerail', 'M2ttime_rail', 'M3ttime_rail',
+    #              'C1triptimePT', 'B1triptime', 'A1ttimeCar']
+    # for var in time_vars:
+    #     if var in data.columns:
+    #         data[var + '_scaled'] = data[var] / 10
     
-    # 价格变量缩放 (除以10)
-    price_vars = ['M1price', 'M2price', 'M3price', 'M4price',
-                  'price1', 'price2', 'price3', 'price4']
-    for var in price_vars:
-        if var in data.columns:
-            data[var + '_scaled'] = data[var] / 10
+    # # 价格变量缩放 (除以10)
+    # price_vars = ['M1price', 'M2price', 'M3price', 'M4price',
+    #               'price1', 'price2', 'price3', 'price4']
+    # for var in price_vars:
+    #     if var in data.columns:
+    #         data[var + '_scaled'] = data[var] / 10
     
     return data
 
@@ -345,43 +345,44 @@ def build_hmm_multinomial(data, n_states=3):
     # 不转移选项的属性 (选项0)
     # 使用first_car, first_taxi, first_pt作为标识
     
-    # M1: 地铁+公交
-    X_M1 = np.column_stack([
-        data['M1ttimerail'].values / 10,   # 地铁时间
-        data['M1triptime'].values / 10,     # 总出行时间
-        data['first_pt'].values,            # 原方式是PT
-        data['normal'].values,              # 正常时段
-    ]).astype(np.float64)
-    
-    # M2: 地铁+共享单车
-    X_M2 = np.column_stack([
-        data['M2ttime_rail'].values / 10,
-        data['M2triptime'].values / 10,
-        data['first_pt'].values,
-        data['normal'].values,
-    ]).astype(np.float64)
-    
-    # M3: 地铁+网约车
-    X_M3 = np.column_stack([
-        data['M3ttime_rail'].values / 10,
-        data['M3triptime'].values / 10,
-        data['first_taxi'].values,
-        data['normal'].values,
-    ]).astype(np.float64)
-    
-    # M4: 共享汽车
-    X_M4 = np.column_stack([
-        data['M4ttime'].values / 10,
-        data['first_taxi'].values,
-        data['distance5'].values,
-    ]).astype(np.float64)
-    
     # 不转移选项
     X_no = np.column_stack([
         data['first_car'].values,
         data['first_taxi'].values,
         data['distance5'].values,
     ]).astype(np.float64)
+
+    # M1: 地铁+公交
+    X_M1 = np.column_stack([
+        data['M1ttimerail'].values,   # 地铁时间
+        data['M1triptime'].values ,     # 总出行时间
+        data['first_pt'].values,            # 原方式是PT
+        data['normal'].values,              # 正常时段
+    ]).astype(np.float64)
+    
+    # M2: 地铁+共享单车
+    X_M2 = np.column_stack([
+        data['M2ttime_rail'].values,
+        data['M2triptime'].values,
+        data['first_pt'].values,
+        data['normal'].values,
+    ]).astype(np.float64)
+    
+    # M3: 地铁+网约车
+    X_M3 = np.column_stack([
+        data['M3ttime_rail'].values,
+        data['M3triptime'].values,
+        data['first_taxi'].values,
+        data['normal'].values,
+    ]).astype(np.float64)
+    
+    # M4: 共享汽车
+    X_M4 = np.column_stack([
+        data['M4ttime'].values,
+        data['first_taxi'].values,
+        data['distance5'].values,
+    ]).astype(np.float64)
+    
     
     # ========== 准备LOS变量 (阶段2) ==========
     
@@ -443,6 +444,7 @@ def build_hmm_multinomial(data, n_states=3):
     
     # 初始状态协变量
     X_init = np.column_stack([
+        data['MaasFamiliar'].values,
         data['sex'].values,
         data['age2'].values,
         data['age3'].values,
@@ -458,10 +460,16 @@ def build_hmm_multinomial(data, n_states=3):
     
     # 状态转移协变量
     X_trans = np.column_stack([
-        data['bundle_match'].values,
-        data['price_value_ratio'].values,
-        data['trial_satisfaction'].values,
-        data['travel_num'].values,
+        data['choose_options'].values,
+        data['time_savings'].values,
+        data['cost_savings'].values,
+        data['match_bus'].values,
+        data['match_metro'].values,
+        data['match_bike'].values,
+        data['match_e_bike'].values,
+        data['match_taxi'].values,
+        data['match_price'].values,
+        data['price_ratio'].values,
     ]).astype(np.float64)
     
     # 观测
@@ -489,33 +497,36 @@ def build_hmm_multinomial(data, n_states=3):
         ASC_t1 = pm.Normal('ASC_t1', mu=0, sigma=2, shape=(n_states, n_alt_t1-1))
         
         # LOS参数 (简化: 跨状态共享，但scale不同)
-        beta_time_t1 = pm.Normal('beta_time_t1', mu=-0.1, sigma=0.1, shape=n_states)
-        beta_rail_t1 = pm.Normal('beta_rail_t1', mu=-0.05, sigma=0.1, shape=n_states)
+        # beta_time_t1 = pm.Normal('beta_time_t1', mu=-0.1, sigma=0.1, shape=n_states)
+        # beta_rail_t1 = pm.Normal('beta_rail_t1', mu=-0.05, sigma=0.1, shape=n_states)
+
+        beta_no_stage1 = pm.Normal('beta_no_stage1', mu=0, sigma=0.1, shape=(n_states, X_no.shape[1]))
+        beta_M1_stage1 = pm.Normal('beta_M1_stage1', mu=0, sigma=0.1, shape=(n_states, X_M1.shape[1]))
+        beta_M2_stage1 = pm.Normal('beta_M2_stage1', mu=0, sigma=0.1, shape=(n_states, X_M2.shape[1]))
+        beta_M3_stage1 = pm.Normal('beta_M3_stage1', mu=0, sigma=0.1, shape=(n_states, X_M3.shape[1]))
+        beta_M4_stage1 = pm.Normal('beta_M4_stage1', mu=0, sigma=0.1, shape=(n_states, X_M4.shape[1]))
         
         # 状态特定的发射概率
         def compute_emit_probs_t1(state_idx):
             """计算状态state_idx下阶段1各选项的选择概率"""
             # 不转移 (参考选项)
-            V_no = pt.zeros(n_obs)
+            V_no = pt.dot(X_no, beta_no_stage1[state_idx])
             
             # M1
-            V_M1 = (ASC_t1[state_idx, 0] + 
-                    beta_rail_t1[state_idx] * X_M1[:, 0] +
-                    beta_time_t1[state_idx] * X_M1[:, 1])
+            V_M1 = ASC_t1[state_idx, 0] + pt.dot(X_M1, beta_M1_stage1[state_idx])
+                    
             
             # M2
             V_M2 = (ASC_t1[state_idx, 1] + 
-                    beta_rail_t1[state_idx] * X_M2[:, 0] +
-                    beta_time_t1[state_idx] * X_M2[:, 1])
+                    pt.dot(X_M2, beta_M2_stage1[state_idx]))
             
             # M3
             V_M3 = (ASC_t1[state_idx, 2] + 
-                    beta_rail_t1[state_idx] * X_M3[:, 0] +
-                    beta_time_t1[state_idx] * X_M3[:, 1])
+                    pt.dot(X_M3, beta_M3_stage1[state_idx]))
             
             # M4
             V_M4 = (ASC_t1[state_idx, 3] + 
-                    beta_time_t1[state_idx] * X_M4[:, 0])
+                    pt.dot(X_M4, beta_M4_stage1[state_idx]))
             
             V_all = pt.stack([V_no, V_M1, V_M2, V_M3, V_M4], axis=1)
             return pm.math.softmax(V_all, axis=1)
@@ -526,28 +537,32 @@ def build_hmm_multinomial(data, n_states=3):
         
         # ---------- 阶段2发射概率 (多项Logit) ----------
         ASC_t2 = pm.Normal('ASC_t2', mu=0, sigma=2, shape=(n_states, n_alt_t2-1))
-        beta_price_t2 = pm.Normal('beta_price_t2', mu=-0.1, sigma=0.1, shape=n_states)
+        beta_bus_stage2 = pm.Normal('beta_bus_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B1.shape[1]))
+        beta_metro_stage2 = pm.Normal('beta_metro_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B2.shape[1]))
+        beta_taxi_stage2 = pm.Normal('beta_taxi_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B3.shape[1]))
+        beta_ultra_stage2 = pm.Normal('beta_ultra_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B4.shape[1]))
+        beta_payg_stage2 = pm.Normal('beta_payg_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_PAYG.shape[1]))
         
         def compute_emit_probs_t2(state_idx):
             """计算状态state_idx下阶段2各选项的选择概率"""
             # Bus First
             V_B1 = (ASC_t2[state_idx, 0] + 
-                    beta_price_t2[state_idx] * X_B1[:, 2])
+                    pt.dot(X_B1, beta_bus_stage2[state_idx]))
             
             # Metro Access
             V_B2 = (ASC_t2[state_idx, 1] + 
-                    beta_price_t2[state_idx] * X_B2[:, 2])
+                    pt.dot(X_B2, beta_metro_stage2[state_idx]))
             
             # Value Taxi
             V_B3 = (ASC_t2[state_idx, 2] + 
-                    beta_price_t2[state_idx] * X_B3[:, 1])
+                    pt.dot(X_B3, beta_taxi_stage2[state_idx]))
             
             # Ultra Access
             V_B4 = (ASC_t2[state_idx, 3] + 
-                    beta_price_t2[state_idx] * X_B4[:, 1])
+                    pt.dot(X_B4, beta_ultra_stage2[state_idx]))
             
             # PAYG (参考选项)
-            V_PAYG = pt.zeros(n_obs)
+            V_PAYG = pt.dot(X_PAYG, beta_payg_stage2[state_idx])
             
             V_all = pt.stack([V_B1, V_B2, V_B3, V_B4, V_PAYG], axis=1)
             return pm.math.softmax(V_all, axis=1)
@@ -597,9 +612,14 @@ def build_hmm_multinomial(data, n_states=3):
         alpha_2 = pt.sum(alpha_1[:, :, None] * trans_probs * emit_2[:, None, :], axis=1)
         
         marginal = pt.sum(alpha_2, axis=1)
-        log_lik = pt.sum(pt.log(marginal + 1e-10))
-        
-        pm.Potential('log_likelihood', log_lik)
+        # ===== 修正部分 =====
+        # 逐样本对数似然（用于WAIC/LOO）
+        log_lik_per_obs = pt.log(marginal + 1e-10)  # shape: (n_obs,)
+        pm.Deterministic('log_lik', log_lik_per_obs)  # 保存逐样本似然
+
+        # 总对数似然（用于采样）
+        total_log_lik = pt.sum(log_lik_per_obs)
+        pm.Potential('log_likelihood', total_log_lik)
         
         pm.Deterministic('pi_init_mean', pt.mean(pi_init, axis=0))
         
@@ -893,6 +913,59 @@ def create_simulated_data(n=500):
     return pd.DataFrame(data)
 
 
+def compute_aic_bic_from_trace(trace, n_obs):
+    """
+    从trace计算AIC和BIC
+    
+    Parameters
+    ----------
+    trace : arviz.InferenceData
+    n_obs : int
+        样本量
+    """
+    
+    # 获取逐样本对数似然的后验均值
+    log_lik_samples = trace.posterior['log_lik'].values  # shape: (chains, draws, n_obs)
+    
+    # 方法1: 使用后验均值参数计算的似然（点估计）
+    log_lik_mean = log_lik_samples.mean(axis=(0, 1))  # 每个样本的平均对数似然
+    total_log_lik = log_lik_mean.sum()
+    
+    # 方法2: 使用后验均值的总似然
+    # total_log_lik = log_lik_samples.sum(axis=2).mean()
+    
+    # 计算参数数量
+    # 需要统计模型中的自由参数
+    k = count_parameters(trace)
+    
+    # AIC 和 BIC
+    aic = -2 * total_log_lik + 2 * k
+    bic = -2 * total_log_lik + k * np.log(n_obs)
+    
+    return {
+        'log_likelihood': total_log_lik,
+        'k': k,
+        'n': n_obs,
+        'AIC': aic,
+        'BIC': bic
+    }
+
+
+def count_parameters(trace):
+    """统计模型参数数量"""
+    k = 0
+    
+    # 遍历后验中的参数
+    for var_name in trace.posterior.data_vars:
+        if var_name.startswith('log_lik') or var_name.endswith('_mean'):
+            continue  # 跳过派生变量
+        
+        var_shape = trace.posterior[var_name].shape[2:]  # 去掉chain和draw维度
+        k += np.prod(var_shape)
+    
+    return int(k)
+
+
 if __name__ == "__main__":
     
     print("="*70)
@@ -904,6 +977,7 @@ if __name__ == "__main__":
     
     # 使用模拟数据测试 (实际使用时替换为真实数据)
     data = load_data('data/最终模型数据.csv')
+    data = data.sample(n=500, random_state=42).reset_index(drop=True)
     # data = create_simulated_data(n=500)
     
     # 2. 预处理
@@ -911,16 +985,10 @@ if __name__ == "__main__":
     data = preprocess_data(data)
     
     print(f"  样本量: {len(data)}")
-    print(f"  阶段1选择MaaS: {data['y1_binary'].mean():.1%}")
-    print(f"  阶段2订阅套餐: {data['y2_binary'].mean():.1%}")
-    print(f"\n  状态转移变量统计:")
-    print(f"    套餐匹配度: mean={data['bundle_match'].mean():.3f}, std={data['bundle_match'].std():.3f}")
-    print(f"    性价比: mean={data['price_value_ratio'].mean():.3f}, std={data['price_value_ratio'].std():.3f}")
-    print(f"    满意度代理: mean={data['trial_satisfaction'].mean():.3f}, std={data['trial_satisfaction'].std():.3f}")
     
     # 3. 构建模型
-    print("\n[Step 3] 构建HMM模型 (二元观测版本)...")
-    model = build_hmm_binary(data, n_states=3)
+    print("\n[Step 3] 构建HMM模型 (多元观测版本)...")
+    model = build_hmm_multinomial(data, n_states=3)
     
     # 4. 先验检查
     print("\n[Step 4] 先验预测检查...")
@@ -929,14 +997,40 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=1000, tune=500, chains=2, target_accept=0.95)
+    trace = fit_model(model, draws=3000, tune=1500, chains=4, target_accept=0.95)
     
     # 6. 结果分析
-    analyze_results(trace, data, model_type='binary')
+    analyze_results(trace, data, model_type='multi')
     
-    # 7. 隐状态推断
-    data = compute_posterior_states(trace, data, model_type='binary')
+    # # 7. 隐状态推断
+    # data = compute_posterior_states(trace, data, model_type='multi')
     
     print("\n" + "="*70)
     print("分析完成!")
     print("="*70)
+
+    # 8. 保存结果
+    print("\n[Step 8] 保存模型结果...")
+    import os
+    output_dir = './maas_hmm_results'
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 保存trace
+    az.to_netcdf(trace, f'{output_dir}/trace_first.nc')
+
+    # 保存摘要
+    summary = az.summary(trace)
+    summary.to_csv(f'{output_dir}/summary_first.csv')
+
+    # 保存数据
+    data.to_csv(f'{output_dir}/data_with_states_first.csv', index=False)
+
+    print(f"结果已保存到 {output_dir}/")
+
+    # 计算AIC/BIC
+    results = compute_aic_bic_from_trace(trace, n_obs=len(data))
+
+    print(f"Log-likelihood: {results['log_likelihood']:.2f}")
+    print(f"Parameters (k): {results['k']}")
+    print(f"AIC: {results['AIC']:.2f}")
+    print(f"BIC: {results['BIC']:.2f}")
