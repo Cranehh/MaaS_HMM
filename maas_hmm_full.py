@@ -998,7 +998,7 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=3000, tune=3000, chains=4, target_accept=0.99)
+    trace = fit_model(model, draws=50000, tune=50000, chains=4, target_accept=0.99)
     
     # 6. 结果分析
     analyze_results(trace, data, model_type='multi')
