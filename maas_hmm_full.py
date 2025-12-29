@@ -253,8 +253,8 @@ def build_hmm_binary(data, n_states=3):
     with pm.Model() as hmm_model:
         
         # ---------- 初始状态分布 P(z1|X_init) ----------
-        alpha_init = pm.Normal('alpha_init', mu=0, sigma=2, shape=n_states-1)
-        beta_init = pm.Normal('beta_init', mu=0, sigma=1, 
+        alpha_init = pm.Normal('alpha_init', mu=0, sigma=0.5, shape=n_states-1)
+        beta_init = pm.Normal('beta_init', mu=0, sigma=0.5, 
                               shape=(n_init_cov, n_states-1))
         
         logits_init = alpha_init + pt.dot(X_init, beta_init)
@@ -263,8 +263,8 @@ def build_hmm_binary(data, n_states=3):
         
         # ---------- 发射概率 (有序约束) ----------
         # t=1: 选择MaaS的概率
-        emit_base_t1 = pm.Normal('emit_base_t1', mu=-1.5, sigma=1)
-        emit_diff_t1 = pm.HalfNormal('emit_diff_t1', sigma=1.5, shape=n_states-1)
+        emit_base_t1 = pm.Normal('emit_base_t1', mu=-1.5, sigma=0.5)
+        emit_diff_t1 = pm.HalfNormal('emit_diff_t1', sigma=0.5, shape=n_states-1)
         emit_logit_t1 = pt.concatenate([
             pt.atleast_1d(emit_base_t1),
             emit_base_t1 + pt.cumsum(emit_diff_t1)
@@ -272,8 +272,8 @@ def build_hmm_binary(data, n_states=3):
         emission_t1 = pm.math.sigmoid(emit_logit_t1)
         
         # t=2: 订阅套餐的概率
-        emit_base_t2 = pm.Normal('emit_base_t2', mu=-1.5, sigma=1)
-        emit_diff_t2 = pm.HalfNormal('emit_diff_t2', sigma=1.5, shape=n_states-1)
+        emit_base_t2 = pm.Normal('emit_base_t2', mu=-1.5, sigma=0.5)
+        emit_diff_t2 = pm.HalfNormal('emit_diff_t2', sigma=0.5, shape=n_states-1)
         emit_logit_t2 = pt.concatenate([
             pt.atleast_1d(emit_base_t2),
             emit_base_t2 + pt.cumsum(emit_diff_t2)
@@ -281,7 +281,7 @@ def build_hmm_binary(data, n_states=3):
         emission_t2 = pm.math.sigmoid(emit_logit_t2)
         
         # ---------- 状态转移矩阵 P(z2|z1, X_trans) ----------
-        trans_logits_raw = pm.Normal('trans_logits_raw', mu=0, sigma=1,
+        trans_logits_raw = pm.Normal('trans_logits_raw', mu=0, sigma=0.5,
                                       shape=(n_states, n_states-1))
         
         # 协变量影响转移
@@ -482,8 +482,8 @@ def build_hmm_multinomial(data, n_states=3):
     with pm.Model() as hmm_model:
         
         # ---------- 初始状态分布 ----------
-        alpha_init = pm.Normal('alpha_init', mu=0, sigma=2, shape=n_states-1)
-        beta_init = pm.Normal('beta_init', mu=0, sigma=1, 
+        alpha_init = pm.Normal('alpha_init', mu=0, sigma=0.5, shape=n_states-1)
+        beta_init = pm.Normal('beta_init', mu=0, sigma=0.5, 
                               shape=(n_init_cov, n_states-1))
         
         logits_init = alpha_init + pt.dot(X_init, beta_init)
@@ -494,17 +494,17 @@ def build_hmm_multinomial(data, n_states=3):
         # 每个隐状态下各选项的效用参数不同
         
         # ASC for each alternative (state-specific)
-        ASC_t1 = pm.Normal('ASC_t1', mu=0, sigma=2, shape=(n_states, n_alt_t1-1))
+        ASC_t1 = pm.Normal('ASC_t1', mu=0, sigma=0.5, shape=(n_states, n_alt_t1-1))
         
         # LOS参数 (简化: 跨状态共享，但scale不同)
         # beta_time_t1 = pm.Normal('beta_time_t1', mu=-0.1, sigma=0.1, shape=n_states)
         # beta_rail_t1 = pm.Normal('beta_rail_t1', mu=-0.05, sigma=0.1, shape=n_states)
 
-        beta_no_stage1 = pm.Normal('beta_no_stage1', mu=0, sigma=0.1, shape=(n_states, X_no.shape[1]))
-        beta_M1_stage1 = pm.Normal('beta_M1_stage1', mu=0, sigma=0.1, shape=(n_states, X_M1.shape[1]))
-        beta_M2_stage1 = pm.Normal('beta_M2_stage1', mu=0, sigma=0.1, shape=(n_states, X_M2.shape[1]))
-        beta_M3_stage1 = pm.Normal('beta_M3_stage1', mu=0, sigma=0.1, shape=(n_states, X_M3.shape[1]))
-        beta_M4_stage1 = pm.Normal('beta_M4_stage1', mu=0, sigma=0.1, shape=(n_states, X_M4.shape[1]))
+        beta_no_stage1 = pm.Normal('beta_no_stage1', mu=0, sigma=0.5, shape=(n_states, X_no.shape[1]))
+        beta_M1_stage1 = pm.Normal('beta_M1_stage1', mu=0, sigma=0.5, shape=(n_states, X_M1.shape[1]))
+        beta_M2_stage1 = pm.Normal('beta_M2_stage1', mu=0, sigma=0.5, shape=(n_states, X_M2.shape[1]))
+        beta_M3_stage1 = pm.Normal('beta_M3_stage1', mu=0, sigma=0.5, shape=(n_states, X_M3.shape[1]))
+        beta_M4_stage1 = pm.Normal('beta_M4_stage1', mu=0, sigma=0.5, shape=(n_states, X_M4.shape[1]))
         
         # 状态特定的发射概率
         def compute_emit_probs_t1(state_idx):
@@ -536,12 +536,12 @@ def build_hmm_multinomial(data, n_states=3):
         emit_probs_t1 = pt.stack(emit_probs_t1_list, axis=0)  # (n_states, n_obs, n_alt)
         
         # ---------- 阶段2发射概率 (多项Logit) ----------
-        ASC_t2 = pm.Normal('ASC_t2', mu=0, sigma=2, shape=(n_states, n_alt_t2-1))
-        beta_bus_stage2 = pm.Normal('beta_bus_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B1.shape[1]))
-        beta_metro_stage2 = pm.Normal('beta_metro_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B2.shape[1]))
-        beta_taxi_stage2 = pm.Normal('beta_taxi_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B3.shape[1]))
-        beta_ultra_stage2 = pm.Normal('beta_ultra_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_B4.shape[1]))
-        beta_payg_stage2 = pm.Normal('beta_payg_stage2', mu=-0.1, sigma=0.1, shape=(n_states, X_PAYG.shape[1]))
+        ASC_t2 = pm.Normal('ASC_t2', mu=0, sigma=0.5, shape=(n_states, n_alt_t2-1))
+        beta_bus_stage2 = pm.Normal('beta_bus_stage2', mu=0, sigma=0.5, shape=(n_states, X_B1.shape[1]))
+        beta_metro_stage2 = pm.Normal('beta_metro_stage2', mu=0, sigma=0.5, shape=(n_states, X_B2.shape[1]))
+        beta_taxi_stage2 = pm.Normal('beta_taxi_stage2', mu=0, sigma=0.5, shape=(n_states, X_B3.shape[1]))
+        beta_ultra_stage2 = pm.Normal('beta_ultra_stage2', mu=0, sigma=0.5, shape=(n_states, X_B4.shape[1]))
+        beta_payg_stage2 = pm.Normal('beta_payg_stage2', mu=0, sigma=0.5, shape=(n_states, X_PAYG.shape[1]))
         
         def compute_emit_probs_t2(state_idx):
             """计算状态state_idx下阶段2各选项的选择概率"""
@@ -571,7 +571,7 @@ def build_hmm_multinomial(data, n_states=3):
         emit_probs_t2 = pt.stack(emit_probs_t2_list, axis=0)
         
         # ---------- 状态转移矩阵 ----------
-        trans_logits_raw = pm.Normal('trans_logits_raw', mu=0, sigma=1,
+        trans_logits_raw = pm.Normal('trans_logits_raw', mu=0, sigma=0.5,
                                       shape=(n_states, n_states-1))
         gamma_trans = pm.Normal('gamma_trans', mu=0, sigma=0.5, shape=n_trans_cov)
         trans_modifier = pt.dot(X_trans, gamma_trans)
@@ -640,7 +640,8 @@ def fit_model(model, draws=1000, tune=500, chains=2, target_accept=0.95):
             target_accept=target_accept,
             return_inferencedata=True,
             random_seed=42,
-            progressbar=True
+            progressbar=True,
+            init='adapt_diag',
         )
     return trace
 
@@ -997,7 +998,7 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=3000, tune=1500, chains=4, target_accept=0.95)
+    trace = fit_model(model, draws=3000, tune=3000, chains=4, target_accept=0.99)
     
     # 6. 结果分析
     analyze_results(trace, data, model_type='multi')
