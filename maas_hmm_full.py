@@ -500,33 +500,50 @@ def build_hmm_multinomial(data, n_states=3):
         # beta_time_t1 = pm.Normal('beta_time_t1', mu=-0.1, sigma=0.1, shape=n_states)
         # beta_rail_t1 = pm.Normal('beta_rail_t1', mu=-0.05, sigma=0.1, shape=n_states)
 
-        beta_no_stage1 = pm.Normal('beta_no_stage1', mu=0, sigma=0.5, shape=(n_states, X_no.shape[1]))
-        beta_M1_stage1 = pm.Normal('beta_M1_stage1', mu=0, sigma=0.5, shape=(n_states, X_M1.shape[1]))
-        beta_M2_stage1 = pm.Normal('beta_M2_stage1', mu=0, sigma=0.5, shape=(n_states, X_M2.shape[1]))
-        beta_M3_stage1 = pm.Normal('beta_M3_stage1', mu=0, sigma=0.5, shape=(n_states, X_M3.shape[1]))
-        beta_M4_stage1 = pm.Normal('beta_M4_stage1', mu=0, sigma=0.5, shape=(n_states, X_M4.shape[1]))
+        beta_firstcar_t1 = pm.Normal('beta_firstcar_t1', mu=0, sigma=0.5, shape=n_states)
+        beta_firsttaxi_t1 = pm.Normal('beta_firsttaxi_t1', mu=0, sigma=0.5, shape=n_states)
+        beta_firstpt_t1 = pm.Normal('beta_firstpt_t1', mu=0, sigma=0.5, shape=n_states)
+        beta_distance5_t1 = pm.Normal('beta_distance5_t1', mu=-0.1, sigma=0.1, shape=n_states)
+        beta_railtime_t1 = pm.Normal('beta_railtime_t1', mu=-0.1, sigma=0.1, shape=n_states)
+        beta_triptime_t1 = pm.Normal('beta_triptime_t1', mu=-0.1, sigma=0.1, shape=n_states)
+        beta_normal_t1 = pm.Normal('beta_normal_t1', mu=0, sigma=0.5, shape=n_states)
         
         # 状态特定的发射概率
         def compute_emit_probs_t1(state_idx):
             """计算状态state_idx下阶段1各选项的选择概率"""
             # 不转移 (参考选项)
-            V_no = pt.dot(X_no, beta_no_stage1[state_idx])
+            V_no = beta_firstcar_t1[state_idx] * X_no[:, 0] + \
+                   beta_firsttaxi_t1[state_idx] * X_no[:, 1] + \
+                   beta_distance5_t1[state_idx] * X_no[:, 2]
             
             # M1
-            V_M1 = ASC_t1[state_idx, 0] + pt.dot(X_M1, beta_M1_stage1[state_idx])
+            V_M1 = ASC_t1[state_idx, 0] + \
+                    beta_railtime_t1[state_idx] * X_M1[:, 0] + \
+                    beta_triptime_t1[state_idx] * X_M1[:, 1] + \
+                    beta_firstpt_t1[state_idx] * X_M1[:, 2] + \
+                    beta_normal_t1[state_idx] * X_M1[:, 3]
                     
             
             # M2
-            V_M2 = (ASC_t1[state_idx, 1] + 
-                    pt.dot(X_M2, beta_M2_stage1[state_idx]))
+            V_M2 = ASC_t1[state_idx, 1] + \
+                    beta_railtime_t1[state_idx] * X_M2[:, 0] + \
+                    beta_triptime_t1[state_idx] * X_M2[:, 1] + \
+                    beta_firstpt_t1[state_idx] * X_M2[:, 2] + \
+                    beta_normal_t1[state_idx] * X_M2[:, 3]
+                    
             
             # M3
-            V_M3 = (ASC_t1[state_idx, 2] + 
-                    pt.dot(X_M3, beta_M3_stage1[state_idx]))
+            V_M3 = ASC_t1[state_idx, 2] + \
+                    beta_railtime_t1[state_idx] * X_M3[:, 0] + \
+                    beta_triptime_t1[state_idx] * X_M3[:, 1] + \
+                    beta_firsttaxi_t1[state_idx] * X_M3[:, 2] + \
+                    beta_normal_t1[state_idx] * X_M3[:, 3]
             
             # M4
-            V_M4 = (ASC_t1[state_idx, 3] + 
-                    pt.dot(X_M4, beta_M4_stage1[state_idx]))
+            V_M4 = ASC_t1[state_idx, 3] + \
+                    beta_triptime_t1[state_idx] * X_M4[:, 0] + \
+                    beta_firsttaxi_t1[state_idx] * X_M4[:, 1] + \
+                    beta_distance5_t1[state_idx] * X_M4[:, 2]
             
             V_all = pt.stack([V_no, V_M1, V_M2, V_M3, V_M4], axis=1)
             return pm.math.softmax(V_all, axis=1)
@@ -537,32 +554,78 @@ def build_hmm_multinomial(data, n_states=3):
         
         # ---------- 阶段2发射概率 (多项Logit) ----------
         ASC_t2 = pm.Normal('ASC_t2', mu=0, sigma=0.5, shape=(n_states, n_alt_t2-1))
-        beta_bus_stage2 = pm.Normal('beta_bus_stage2', mu=0, sigma=0.5, shape=(n_states, X_B1.shape[1]))
-        beta_metro_stage2 = pm.Normal('beta_metro_stage2', mu=0, sigma=0.5, shape=(n_states, X_B2.shape[1]))
-        beta_taxi_stage2 = pm.Normal('beta_taxi_stage2', mu=0, sigma=0.5, shape=(n_states, X_B3.shape[1]))
-        beta_ultra_stage2 = pm.Normal('beta_ultra_stage2', mu=0, sigma=0.5, shape=(n_states, X_B4.shape[1]))
-        beta_payg_stage2 = pm.Normal('beta_payg_stage2', mu=0, sigma=0.5, shape=(n_states, X_PAYG.shape[1]))
+        beta_taxi12_t2 = pm.Normal('beta_taxi12_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_priceratio_t2 = pm.Normal('beta_priceratio_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_price_t2 = pm.Normal('beta_price_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_weekbus_t2 = pm.Normal('beta_weekbus_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_ebike_t2 = pm.Normal('beta_ebike_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_occupy_t2 = pm.Normal('beta_occupy_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_sex_t2 = pm.Normal('beta_sex_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_income1_t2 = pm.Normal('beta_income1_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_age4_t2 = pm.Normal('beta_age4_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_traveldistancework_t2 = pm.Normal('beta_traveldistancework_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_weekmetro_t2 = pm.Normal('beta_weekmetro_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_c7_t2 = pm.Normal('beta_c7_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_traveldistanceweekend_t2 = pm.Normal('beta_traveldistanceweekend_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_weektaxi_t2 = pm.Normal('beta_weektaxi_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_age3_t2 = pm.Normal('beta_age3_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_income2_t2 = pm.Normal('beta_income2_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_c6_t2 = pm.Normal('beta_c6_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_cost_t2 = pm.Normal('beta_cost_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_license_t2 = pm.Normal('beta_license_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_havecar_t2 = pm.Normal('beta_havecar_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_education_t2 = pm.Normal('beta_education_t2', mu=0, sigma=0.5, shape=n_states)
         
         def compute_emit_probs_t2(state_idx):
             """计算状态state_idx下阶段2各选项的选择概率"""
             # Bus First
-            V_B1 = (ASC_t2[state_idx, 0] + 
-                    pt.dot(X_B1, beta_bus_stage2[state_idx]))
-            
+            V_B1 = ASC_t2[state_idx, 0] + \
+                    beta_taxi12_t2[state_idx] * X_B1[:, 0] + \
+                    beta_priceratio_t2[state_idx] * X_B1[:, 1] + \
+                    beta_price_t2[state_idx] * X_B1[:, 2] + \
+                    beta_weekbus_t2[state_idx] * X_B1[:, 3] + \
+                    beta_ebike_t2[state_idx] * X_B1[:, 4] + \
+                    beta_occupy_t2[state_idx] * X_B1[:, 5] + \
+                    beta_sex_t2[state_idx] * X_B1[:, 6] + \
+                    beta_income1_t2[state_idx] * X_B1[:, 7] + \
+                    beta_age4_t2[state_idx] * X_B1[:, 8]
             # Metro Access
-            V_B2 = (ASC_t2[state_idx, 1] + 
-                    pt.dot(X_B2, beta_metro_stage2[state_idx]))
+            V_B2 = ASC_t2[state_idx, 1] + \
+                    beta_taxi12_t2[state_idx] * X_B2[:, 0] + \
+                    beta_priceratio_t2[state_idx] * X_B2[:, 1] + \
+                    beta_price_t2[state_idx] * X_B2[:, 2] + \
+                    beta_traveldistancework_t2[state_idx] * X_B2[:, 3] + \
+                    beta_weekmetro_t2[state_idx] * X_B2[:, 4] + \
+                    beta_ebike_t2[state_idx] * X_B2[:, 5] + \
+                    beta_occupy_t2[state_idx] * X_B2[:, 6] + \
+                    beta_sex_t2[state_idx] * X_B2[:, 7] + \
+                    beta_c7_t2[state_idx] * X_B2[:, 8] + \
+                    beta_income1_t2[state_idx] * X_B2[:, 9] + \
+                    beta_age4_t2[state_idx] * X_B2[:, 10]
             
             # Value Taxi
-            V_B3 = (ASC_t2[state_idx, 2] + 
-                    pt.dot(X_B3, beta_taxi_stage2[state_idx]))
+            V_B3 = ASC_t2[state_idx, 2] + \
+                    beta_priceratio_t2[state_idx] * X_B3[:, 0] + \
+                    beta_price_t2[state_idx] * X_B3[:, 1] + \
+                    beta_traveldistanceweekend_t2[state_idx] * X_B3[:, 2] + \
+                    beta_weektaxi_t2[state_idx] * X_B3[:, 3] + \
+                    beta_age3_t2[state_idx] * X_B3[:, 4] + \
+                    beta_income2_t2[state_idx] * X_B3[:, 5]
             
             # Ultra Access
-            V_B4 = (ASC_t2[state_idx, 3] + 
-                    pt.dot(X_B4, beta_ultra_stage2[state_idx]))
+            V_B4 = ASC_t2[state_idx, 3] + \
+                    beta_priceratio_t2[state_idx] * X_B4[:, 0] + \
+                    beta_price_t2[state_idx] * X_B4[:, 1] + \
+                    beta_c6_t2[state_idx] * X_B4[:, 2] + \
+                    beta_cost_t2[state_idx] * X_B4[:, 3] + \
+                    beta_weektaxi_t2[state_idx] * X_B4[:, 4] + \
+                    beta_age3_t2[state_idx] * X_B4[:, 5]
             
             # PAYG (参考选项)
-            V_PAYG = pt.dot(X_PAYG, beta_payg_stage2[state_idx])
+            V_PAYG = beta_cost_t2[state_idx] * X_PAYG[:, 0] + \
+                     beta_license_t2[state_idx] * X_PAYG[:, 1] + \
+                     beta_havecar_t2[state_idx] * X_PAYG[:, 2] + \
+                     beta_education_t2[state_idx] * X_PAYG[:, 3]
             
             V_all = pt.stack([V_B1, V_B2, V_B3, V_B4, V_PAYG], axis=1)
             return pm.math.softmax(V_all, axis=1)
@@ -978,7 +1041,7 @@ if __name__ == "__main__":
     
     # 使用模拟数据测试 (实际使用时替换为真实数据)
     data = load_data('data/最终模型数据.csv')
-    data = data.sample(n=500, random_state=42).reset_index(drop=True)
+    # data = data.sample(n=500, random_state=42).reset_index(drop=True)
     # data = create_simulated_data(n=500)
     
     # 2. 预处理
@@ -998,7 +1061,7 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=50000, tune=50000, chains=4, target_accept=0.99)
+    trace = fit_model(model, draws=2000, tune=2000, chains=4, target_accept=0.99)
     
     # 6. 结果分析
     analyze_results(trace, data, model_type='multi')
@@ -1016,15 +1079,16 @@ if __name__ == "__main__":
     output_dir = './maas_hmm_results'
     os.makedirs(output_dir, exist_ok=True)
 
+    name = 'less_parameters'
     # 保存trace
-    az.to_netcdf(trace, f'{output_dir}/trace_first.nc')
+    az.to_netcdf(trace, f'{output_dir}/trace_{name}.nc')
 
     # 保存摘要
     summary = az.summary(trace)
-    summary.to_csv(f'{output_dir}/summary_first.csv')
+    summary.to_csv(f'{output_dir}/summary_{name}.csv')
 
     # 保存数据
-    data.to_csv(f'{output_dir}/data_with_states_first.csv', index=False)
+    data.to_csv(f'{output_dir}/data_with_states_{name}.csv', index=False)
 
     print(f"结果已保存到 {output_dir}/")
 
