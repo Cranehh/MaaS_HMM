@@ -978,7 +978,7 @@ if __name__ == "__main__":
     
     # 使用模拟数据测试 (实际使用时替换为真实数据)
     data = load_data('data/最终模型数据.csv')
-    data = data.sample(n=500, random_state=42).reset_index(drop=True)
+    # data = data.sample(n=500, random_state=42).reset_index(drop=True)
     # data = create_simulated_data(n=500)
     
     # 2. 预处理
@@ -998,7 +998,7 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=50000, tune=50000, chains=4, target_accept=0.99)
+    trace = fit_model(model, draws=4000, tune=4000, chains=4, target_accept=0.99)
     
     # 6. 结果分析
     analyze_results(trace, data, model_type='multi')
@@ -1016,15 +1016,16 @@ if __name__ == "__main__":
     output_dir = './maas_hmm_results'
     os.makedirs(output_dir, exist_ok=True)
 
+    name = 'more_param'
     # 保存trace
-    az.to_netcdf(trace, f'{output_dir}/trace_first.nc')
+    az.to_netcdf(trace, f'{output_dir}/trace_{name}.nc')
 
     # 保存摘要
     summary = az.summary(trace)
-    summary.to_csv(f'{output_dir}/summary_first.csv')
+    summary.to_csv(f'{output_dir}/summary_{name}.csv')
 
     # 保存数据
-    data.to_csv(f'{output_dir}/data_with_states_first.csv', index=False)
+    data.to_csv(f'{output_dir}/data_with_states_{name}.csv', index=False)
 
     print(f"结果已保存到 {output_dir}/")
 
