@@ -1061,7 +1061,7 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=2000, tune=2000, chains=4, target_accept=0.99)
+    trace = fit_model(model, draws=4000, tune=4000, chains=4, target_accept=0.99)
     
     # 6. 结果分析
     analyze_results(trace, data, model_type='multi')
@@ -1079,7 +1079,7 @@ if __name__ == "__main__":
     output_dir = './maas_hmm_results'
     os.makedirs(output_dir, exist_ok=True)
 
-    name = 'less_parameters'
+    name = 'more_param'
     # 保存trace
     az.to_netcdf(trace, f'{output_dir}/trace_{name}.nc')
 
