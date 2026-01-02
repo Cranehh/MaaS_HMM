@@ -1052,7 +1052,7 @@ if __name__ == "__main__":
     
     # 3. 构建模型
     print("\n[Step 3] 构建HMM模型 (多元观测版本)...")
-    model = build_hmm_multinomial(data, n_states=3)
+    model = build_hmm_multinomial(data, n_states=2)
     
     # 4. 先验检查
     print("\n[Step 4] 先验预测检查...")
@@ -1079,7 +1079,7 @@ if __name__ == "__main__":
     output_dir = './maas_hmm_results'
     os.makedirs(output_dir, exist_ok=True)
 
-    name = 'more_param'
+    name = 'state_2'
     # 保存trace
     az.to_netcdf(trace, f'{output_dir}/trace_{name}.nc')
 
