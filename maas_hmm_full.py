@@ -1064,7 +1064,7 @@ if __name__ == "__main__":
     trace = fit_model(model, draws=4000, tune=4000, chains=4, target_accept=0.99)
     
     # 6. 结果分析
-    analyze_results(trace, data, model_type='multi')
+    # analyze_results(trace, data, model_type='multi')
     
     # # 7. 隐状态推断
     # data = compute_posterior_states(trace, data, model_type='multi')
