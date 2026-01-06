@@ -565,7 +565,7 @@ def build_hmm_multinomial(data, n_states=3):
         ASC_t2 = pm.Normal('ASC_t2', mu=0, sigma=0.5, shape=(n_states, n_alt_t2-1))
         # beta_taxi12_t2 = pm.Normal('beta_taxi12_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_priceratio_t2 = pm.Normal('beta_priceratio_t2', mu=0, sigma=0.5, shape=n_states)
-        beta_price_t2 = pm.Normal('beta_price_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_price_t2 = -pm.HalfNormal('beta_price_t2', sigma=0.5, shape=n_states)
         # beta_weekbus_t2 = pm.Normal('beta_weekbus_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_ebike_t2 = pm.Normal('beta_ebike_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_occupy_t2 = pm.Normal('beta_occupy_t2', mu=0, sigma=0.5, shape=n_states)
@@ -1078,7 +1078,7 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=4000, tune=1000, chains=4, target_accept=0.90)
+    trace = fit_model(model, draws=10000, tune=1000, chains=4, target_accept=0.90)
     
     # 6. 结果分析
     # analyze_results(trace, data, model_type='multi')
