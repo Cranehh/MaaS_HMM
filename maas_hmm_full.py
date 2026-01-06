@@ -505,47 +505,51 @@ def build_hmm_multinomial(data, n_states=3):
         # beta_firstpt_t1 = pm.Normal('beta_firstpt_t1', mu=0, sigma=0.5, shape=n_states)
         # beta_distance5_t1 = pm.Normal('beta_distance5_t1', mu=-0.1, sigma=0.1, shape=n_states)
         # beta_railtime_t1 = pm.Normal('beta_railtime_t1', mu=-0.1, sigma=0.5, shape=n_states)
-        # beta_triptime_t1 = pm.Normal('beta_triptime_t1', mu=-0.1, sigma=0.5, shape=n_states)
+        beta_triptime_t1 = pm.Normal('beta_triptime_t1', mu=-0.1, sigma=0.5, shape=n_states)
         # beta_normal_t1 = pm.Normal('beta_normal_t1', mu=0, sigma=0.5, shape=n_states)
         
         # 状态特定的发射概率
         def compute_emit_probs_t1(state_idx):
             """计算状态state_idx下阶段1各选项的选择概率"""
             # 不转移 (参考选项)
-            V_no = (beta_firstcar_t1[state_idx] * X_no[:, 0] 
+            V_no = (beta_firstcar_t1[state_idx] * X_no[:, 0]
                 #    beta_firsttaxi_t1[state_idx] * X_no[:, 1]
                 #    beta_distance5_t1[state_idx] * X_no[:, 2]
                    )
             
             # M1
-            V_M1 = (ASC_t1[state_idx, 0] 
-                    # beta_railtime_t1[state_idx] * X_M1[:, 0] + \
-                    # beta_triptime_t1[state_idx] * X_M1[:, 1] + \
+            V_M1 = (0 +\
+                    # ASC_t1[state_idx, 0] 
+                    # beta_railtime_t1[state_idx] * X_M1[:, 0]
+                    beta_triptime_t1[state_idx] * X_M1[:, 1]
                     # beta_firstpt_t1[state_idx] * X_M1[:, 2]
                     # beta_normal_t1[state_idx] * X_M1[:, 3]
                     )
                     
             
             # M2
-            V_M2 = (ASC_t1[state_idx, 1]
-                    # beta_railtime_t1[state_idx] * X_M2[:, 0] + \
-                    # beta_triptime_t1[state_idx] * X_M2[:, 1] + \
+            V_M2 = (0+\
+                    # ASC_t1[state_idx, 1] + \
+                    # beta_railtime_t1[state_idx] * X_M2[:, 0]
+                    beta_triptime_t1[state_idx] * X_M2[:, 1]
                     # beta_firstpt_t1[state_idx] * X_M2[:, 2]
                     # beta_normal_t1[state_idx] * X_M2[:, 3]
                     )
                     
             
             # M3
-            V_M3 = (ASC_t1[state_idx, 2]
-                    # beta_railtime_t1[state_idx] * X_M3[:, 0] + \
-                    # beta_triptime_t1[state_idx] * X_M3[:, 1] + \
+            V_M3 = (0+\
+                    # ASC_t1[state_idx, 2]
+                    # beta_railtime_t1[state_idx] * X_M3[:, 0]
+                    beta_triptime_t1[state_idx] * X_M3[:, 1]
                     # beta_firsttaxi_t1[state_idx] * X_M3[:, 2]
                     # beta_normal_t1[state_idx] * X_M3[:, 3]
                     )
             
             # M4
-            V_M4 = (ASC_t1[state_idx, 3]
-                    # beta_triptime_t1[state_idx] * X_M4[:, 0] + \
+            V_M4 = (0 +\
+                    # ASC_t1[state_idx, 3]
+                    beta_triptime_t1[state_idx] * X_M4[:, 0]
                     # beta_firsttaxi_t1[state_idx] * X_M4[:, 1]
                     # beta_distance5_t1[state_idx] * X_M4[:, 2]
                     )
@@ -561,7 +565,7 @@ def build_hmm_multinomial(data, n_states=3):
         ASC_t2 = pm.Normal('ASC_t2', mu=0, sigma=0.5, shape=(n_states, n_alt_t2-1))
         # beta_taxi12_t2 = pm.Normal('beta_taxi12_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_priceratio_t2 = pm.Normal('beta_priceratio_t2', mu=0, sigma=0.5, shape=n_states)
-        # beta_price_t2 = pm.Normal('beta_price_t2', mu=0, sigma=0.5, shape=n_states)
+        beta_price_t2 = pm.Normal('beta_price_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_weekbus_t2 = pm.Normal('beta_weekbus_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_ebike_t2 = pm.Normal('beta_ebike_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_occupy_t2 = pm.Normal('beta_occupy_t2', mu=0, sigma=0.5, shape=n_states)
@@ -584,10 +588,11 @@ def build_hmm_multinomial(data, n_states=3):
         def compute_emit_probs_t2(state_idx):
             """计算状态state_idx下阶段2各选项的选择概率"""
             # Bus First
-            V_B1 = (ASC_t2[state_idx, 0]
+            V_B1 = (0 +\
+                    # ASC_t2[state_idx, 0]
                     # beta_taxi12_t2[state_idx] * X_B1[:, 0] + \
                     # beta_priceratio_t2[state_idx] * X_B1[:, 1] + \
-                    # beta_price_t2[state_idx] * X_B1[:, 2]
+                    beta_price_t2[state_idx] * X_B1[:, 2]
                     # beta_weekbus_t2[state_idx] * X_B1[:, 3] + \
                     # beta_ebike_t2[state_idx] * X_B1[:, 4] + \
                     # beta_occupy_t2[state_idx] * X_B1[:, 5] + \
@@ -596,10 +601,11 @@ def build_hmm_multinomial(data, n_states=3):
                     # beta_age4_t2[state_idx] * X_B1[:, 8]
                     )
             # Metro Access
-            V_B2 = (ASC_t2[state_idx, 1] 
+            V_B2 = (0 +\
+                    # ASC_t2[state_idx, 1] 
                     # beta_taxi12_t2[state_idx] * X_B2[:, 0] + \
                     # beta_priceratio_t2[state_idx] * X_B2[:, 1] + \
-                    # beta_price_t2[state_idx] * X_B2[:, 2]
+                    beta_price_t2[state_idx] * X_B2[:, 2]
                     # beta_traveldistancework_t2[state_idx] * X_B2[:, 3] + \
                     # beta_weekmetro_t2[state_idx] * X_B2[:, 4] + \
                     # beta_ebike_t2[state_idx] * X_B2[:, 5] + \
@@ -611,9 +617,10 @@ def build_hmm_multinomial(data, n_states=3):
                     )
             
             # Value Taxi
-            V_B3 = (ASC_t2[state_idx, 2] 
+            V_B3 = (0 +\
+                    # ASC_t2[state_idx, 2] 
                     # beta_priceratio_t2[state_idx] * X_B3[:, 0] + \
-                    # beta_price_t2[state_idx] * X_B3[:, 1]
+                    beta_price_t2[state_idx] * X_B3[:, 1]
                     # beta_traveldistanceweekend_t2[state_idx] * X_B3[:, 2] + \
                     # beta_weektaxi_t2[state_idx] * X_B3[:, 3] + \
                     # beta_age3_t2[state_idx] * X_B3[:, 4] + \
@@ -621,9 +628,10 @@ def build_hmm_multinomial(data, n_states=3):
                     )
             
             # Ultra Access
-            V_B4 = (ASC_t2[state_idx, 3] 
+            V_B4 = (0 +\
+                    # ASC_t2[state_idx, 3] 
                     # beta_priceratio_t2[state_idx] * X_B4[:, 0] + \
-                    # beta_price_t2[state_idx] * X_B4[:, 1]
+                    beta_price_t2[state_idx] * X_B4[:, 1]
                     # beta_c6_t2[state_idx] * X_B4[:, 2] + \
                     # beta_cost_t2[state_idx] * X_B4[:, 3] + \
                     # beta_weektaxi_t2[state_idx] * X_B4[:, 4] + \
