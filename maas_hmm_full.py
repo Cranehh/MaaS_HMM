@@ -494,7 +494,30 @@ def build_hmm_multinomial(data, n_states=3):
         # 每个隐状态下各选项的效用参数不同
         
         # ASC for each alternative (state-specific)
-        ASC_t1 = pm.Normal('ASC_t1', mu=0, sigma=0.5, shape=(n_states, n_alt_t1-1))
+        # 定义一个基准效用，强制排序
+        maas_base_utility_raw = pm.Normal('maas_base_utility_raw', mu=0, sigma=1, shape=n_states)
+        maas_base_utility = pm.Deterministic('maas_base_utility', pt.sort(maas_base_utility_raw))
+        
+        # 2. 定义各具体选项(M1-M4)相对于基准的偏差 (不排序，允许各选项有差异)
+        # 这样既保证了状态有序，又保留了对不同 MaaS 模式的灵活性
+        M1_delta = pm.Normal('M1_delta', mu=0, sigma=0.5)
+        M2_delta = pm.Normal('M2_delta', mu=0, sigma=0.5)
+        M3_delta = pm.Normal('M3_delta', mu=0, sigma=0.5)
+        M4_delta = pm.Normal('M4_delta', mu=0, sigma=0.5)
+        
+        # 3. 组合出最终的 ASC 矩阵
+        # shape: (n_states, 4) -> 对应 M1, M2, M3, M4
+        # 注意：这里需要利用广播机制或手动堆叠
+        # State 0 的 M1 ASC = maas_base_utility[0] + M1_delta
+        # State 2 的 M1 ASC = maas_base_utility[2] + M1_delta (必然更大)
+        
+        ASC_M1 = maas_base_utility + M1_delta
+        ASC_M2 = maas_base_utility + M2_delta
+        ASC_M3 = maas_base_utility + M3_delta
+        ASC_M4 = maas_base_utility + M4_delta
+        
+        # 堆叠成模型需要的形状 (n_states, 4)
+        ASC_t1 = pt.stack([ASC_M1, ASC_M2, ASC_M3, ASC_M4], axis=1)
         
         # LOS参数 (简化: 跨状态共享，但scale不同)
         # beta_time_t1 = pm.Normal('beta_time_t1', mu=-0.1, sigma=0.1, shape=n_states)
@@ -519,7 +542,7 @@ def build_hmm_multinomial(data, n_states=3):
             
             # M1
             V_M1 = (0 +\
-                    # ASC_t1[state_idx, 0] 
+                    ASC_t1[state_idx, 0]  +\
                     # beta_railtime_t1[state_idx] * X_M1[:, 0]
                     beta_triptime_t1[state_idx] * X_M1[:, 1]
                     # beta_firstpt_t1[state_idx] * X_M1[:, 2]
@@ -529,7 +552,7 @@ def build_hmm_multinomial(data, n_states=3):
             
             # M2
             V_M2 = (0+\
-                    # ASC_t1[state_idx, 1] + \
+                    ASC_t1[state_idx, 1] + \
                     # beta_railtime_t1[state_idx] * X_M2[:, 0]
                     beta_triptime_t1[state_idx] * X_M2[:, 1]
                     # beta_firstpt_t1[state_idx] * X_M2[:, 2]
@@ -539,7 +562,7 @@ def build_hmm_multinomial(data, n_states=3):
             
             # M3
             V_M3 = (0+\
-                    # ASC_t1[state_idx, 2]
+                    ASC_t1[state_idx, 2] +\
                     # beta_railtime_t1[state_idx] * X_M3[:, 0]
                     beta_triptime_t1[state_idx] * X_M3[:, 1]
                     # beta_firsttaxi_t1[state_idx] * X_M3[:, 2]
@@ -548,7 +571,7 @@ def build_hmm_multinomial(data, n_states=3):
             
             # M4
             V_M4 = (0 +\
-                    # ASC_t1[state_idx, 3]
+                    ASC_t1[state_idx, 3] +\
                     beta_triptime_t1[state_idx] * X_M4[:, 0]
                     # beta_firsttaxi_t1[state_idx] * X_M4[:, 1]
                     # beta_distance5_t1[state_idx] * X_M4[:, 2]
@@ -565,7 +588,7 @@ def build_hmm_multinomial(data, n_states=3):
         ASC_t2 = pm.Normal('ASC_t2', mu=0, sigma=0.5, shape=(n_states, n_alt_t2-1))
         # beta_taxi12_t2 = pm.Normal('beta_taxi12_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_priceratio_t2 = pm.Normal('beta_priceratio_t2', mu=0, sigma=0.5, shape=n_states)
-        beta_price_t2 = -pm.HalfNormal('beta_price_t2', sigma=0.5, shape=n_states)
+        beta_price_t2 = pm.Normal('beta_price_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_weekbus_t2 = pm.Normal('beta_weekbus_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_ebike_t2 = pm.Normal('beta_ebike_t2', mu=0, sigma=0.5, shape=n_states)
         # beta_occupy_t2 = pm.Normal('beta_occupy_t2', mu=0, sigma=0.5, shape=n_states)
@@ -1078,7 +1101,7 @@ if __name__ == "__main__":
     
     # 5. MCMC采样
     print("\n[Step 5] MCMC采样...")
-    trace = fit_model(model, draws=10000, tune=1000, chains=4, target_accept=0.90)
+    trace = fit_model(model, draws=5000, tune=1000, chains=4, target_accept=0.90)
     
     # 6. 结果分析
     # analyze_results(trace, data, model_type='multi')
@@ -1096,7 +1119,7 @@ if __name__ == "__main__":
     output_dir = './maas_hmm_results'
     os.makedirs(output_dir, exist_ok=True)
 
-    name = 'non_variable'
+    name = 'sort'
     # 保存trace
     az.to_netcdf(trace, f'{output_dir}/trace_{name}.nc')
 
