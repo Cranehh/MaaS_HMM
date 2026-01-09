@@ -495,8 +495,10 @@ def build_hmm_multinomial(data, n_states=3):
         
         # ASC for each alternative (state-specific)
         # 定义一个基准效用，强制排序
-        maas_base_utility_raw = pm.Normal('maas_base_utility_raw', mu=0, sigma=1, shape=n_states)
-        maas_base_utility = pm.Deterministic('maas_base_utility', pt.sort(maas_base_utility_raw))
+        maas_base_utility_0 = pm.Normal('maas_base_utility_0', mu=-1, sigma=1)  # 状态0基准
+        maas_base_diff = pm.HalfNormal('maas_base_diff', sigma=1)  # 强制正值
+        maas_base_utility = pt.stack([maas_base_utility_0, 
+                                    maas_base_utility_0 + maas_base_diff])
         
         # 2. 定义各具体选项(M1-M4)相对于基准的偏差 (不排序，允许各选项有差异)
         # 这样既保证了状态有序，又保留了对不同 MaaS 模式的灵活性
@@ -1119,7 +1121,7 @@ if __name__ == "__main__":
     output_dir = './maas_hmm_results'
     os.makedirs(output_dir, exist_ok=True)
 
-    name = 'sort'
+    name = 'sort1'
     # 保存trace
     az.to_netcdf(trace, f'{output_dir}/trace_{name}.nc')
 
