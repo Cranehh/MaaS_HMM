@@ -126,15 +126,20 @@ G_PriceRatio = Beta('G_PriceRatio', 0, None, None, 0)
 
 # 基准常数 (有序约束确保状态可识别)
 # State 1 (Skeptic) 基准ASC
-ASC_Base_S1 = Beta('ASC_Base_S1', -1, None, None, 0)
+ASC_M1_S1 = Beta('ASC_M1_S1', 0, None, None, 0)
+ASC_M2_S1 = Beta('ASC_M2_S1', 0, None, None, 0)
+ASC_M3_S1 = Beta('ASC_M3_S1', 0, None, None, 0)
+ASC_M4_S1 = Beta('ASC_M4_S1', 0, None, None, 0)
 # State 2 = State 1 + Delta (强制正值确保有序)
-ASC_Diff = Beta('ASC_Diff', 1, 0, None, 0)  # lower bound 0 确保有序
+ASC_Diff1 = Beta('ASC_Diff1', 1, 0, None, 0)  # lower bound 0 确保有序
+ASC_Diff2 = Beta('ASC_Diff2', 1, 0, None, 0)
+ASC_Diff3 = Beta('ASC_Diff3', 1, 0, None, 0)
+ASC_Diff4 = Beta('ASC_Diff4', 1, 0, None, 0)
 
-# 模式特定偏差 (M1-M4相对于No的ASC差异, 跨状态共享)
-M1_Delta = Beta('M1_Delta', 0, None, None, 0)
-M2_Delta = Beta('M2_Delta', 0, None, None, 0)
-M3_Delta = Beta('M3_Delta', 0, None, None, 0)
-M4_Delta = Beta('M4_Delta', 0, None, None, 0)
+ASC_M1_S2 = ASC_M1_S1 + ASC_Diff1
+ASC_M2_S2 = ASC_M2_S1 + ASC_Diff2
+ASC_M3_S2 = ASC_M3_S1 + ASC_Diff3
+ASC_M4_S2 = ASC_M4_S1 + ASC_Diff4
 
 # --- State 1 (Skeptic) 阶段1 LOS参数 ---
 B_FirstCar_S1 = Beta('B_FirstCar_S1', 0, None, None, 0)
@@ -228,7 +233,6 @@ B_Education_S2 = Beta('B_Education_S2', 0, None, None, 0)
 # =============================================================================
 
 # --- 计算状态相关的基准ASC ---
-ASC_Base_S2 = ASC_Base_S1 + ASC_Diff
 
 # -----------------------------------------------------------------------------
 # 3.1 阶段1效用: MaaS模式选择
@@ -242,28 +246,28 @@ V1_0_S1 = (B_FirstCar_S1 * first_car +
            B_Distance5_S1 * distance5)
 
 # M1: 地铁+公交
-V1_1_S1 = (ASC_Base_S1 + M1_Delta +
+V1_1_S1 = (ASC_M1_S1 +
            B_RailTime_S1 * M1ttimerail / 10 +
            B_TripTime_S1 * M1triptime / 10 +
            B_FirstPT_S1 * first_pt +
            B_Normal_S1 * normal)
 
 # M2: 地铁+共享单车
-V1_2_S1 = (ASC_Base_S1 + M2_Delta +
+V1_2_S1 = (ASC_M2_S1 +
            B_RailTime_S1 * M2ttime_rail / 10 +
            B_TripTime_S1 * M2triptime / 10 +
            B_FirstPT_S1 * first_pt +
            B_Normal_S1 * normal)
 
 # M3: 地铁+网约车
-V1_3_S1 = (ASC_Base_S1 + M3_Delta +
+V1_3_S1 = (ASC_M3_S1 +
            B_RailTime_S1 * M3ttime_rail / 10 +
            B_TripTime_S1 * M3triptime / 10 +
            B_FirstTaxi_S1 * first_taxi +
            B_Normal_S1 * normal)
 
 # M4: 共享汽车
-V1_4_S1 = (ASC_Base_S1 + M4_Delta +
+V1_4_S1 = (ASC_M4_S1 +
            B_TripTime_S1 * M4ttime / 10 +
            B_FirstTaxi_S1 * first_taxi +
            B_Distance5_S1 * distance5)
@@ -275,25 +279,25 @@ V1_0_S2 = (B_FirstCar_S2 * first_car +
            B_FirstTaxi_S2 * first_taxi +
            B_Distance5_S2 * distance5)
 
-V1_1_S2 = (ASC_Base_S2 + M1_Delta +
+V1_1_S2 = (ASC_M1_S2 +
            B_RailTime_S2 * M1ttimerail / 10 +
            B_TripTime_S2 * M1triptime / 10 +
            B_FirstPT_S2 * first_pt +
            B_Normal_S2 * normal)
 
-V1_2_S2 = (ASC_Base_S2 + M2_Delta +
+V1_2_S2 = (ASC_M2_S2 +
            B_RailTime_S2 * M2ttime_rail / 10 +
            B_TripTime_S2 * M2triptime / 10 +
            B_FirstPT_S2 * first_pt +
            B_Normal_S2 * normal)
 
-V1_3_S2 = (ASC_Base_S2 + M3_Delta +
+V1_3_S2 = (ASC_M3_S2 +
            B_RailTime_S2 * M3ttime_rail / 10 +
            B_TripTime_S2 * M3triptime / 10 +
            B_FirstTaxi_S2 * first_taxi +
            B_Normal_S2 * normal)
 
-V1_4_S2 = (ASC_Base_S2 + M4_Delta +
+V1_4_S2 = (ASC_M4_S2 +
            B_TripTime_S2 * M4ttime / 10 +
            B_FirstTaxi_S2 * first_taxi +
            B_Distance5_S2 * distance5)
