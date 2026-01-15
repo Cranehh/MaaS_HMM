@@ -141,6 +141,7 @@ ASC_M2_S2 = ASC_M2_S1 + ASC_Diff2
 ASC_M3_S2 = ASC_M3_S1 + ASC_Diff3
 ASC_M4_S2 = ASC_M4_S1 + ASC_Diff4
 
+
 # --- State 1 (Skeptic) 阶段1 LOS参数 ---
 B_FirstCar_S1 = Beta('B_FirstCar_S1', 0, None, None, 0)
 B_FirstTaxi_S1 = Beta('B_FirstTaxi_S1', 0, None, None, 0)
@@ -414,6 +415,27 @@ V2_Map_S2 = {0: V2_0_S2, 1: V2_1_S2, 2: V2_2_S2, 3: V2_3_S2, 4: V2_4_S2}
 av1 = {0:1, 1:1, 2:1, 3:1, 4:1}
 av2 = {0:1, 1:1, 2:1, 3:1, 4:1}
 
+MU1 = Beta('MU1', 1, 0, 100, 0)
+MU2 = Beta('MU2', 1, 0, 100, 0)
+# MU3 = Beta('MU3', 1, 0, 100, 0)
+# PT = MU1, [1,2,3]
+# Car = 1, [4]
+# Taxi = 1, [5]
+# Bike = 1, [6]
+
+##nested
+PT = MU1, [0,1]
+TAXI = 1, [2]
+MORE = 1,[3]
+NO = 1 ,[4]
+nests1 = PT,TAXI, MORE,NO
+
+PT2 = MU2, [0,1]
+TAXI2 = 1, [2]
+MORE2 = 1,[3]
+NO2 = 1 ,[4]
+nests2 = PT2, TAXI2, MORE2, NO2
+
 # =============================================================================
 # 4. 概率计算 (Probabilities)
 # =============================================================================
@@ -422,12 +444,12 @@ av2 = {0:1, 1:1, 2:1, 3:1, 4:1}
 # 4.1 观测概率 P(y | State) - 发射概率
 # -----------------------------------------------------------------------------
 # 阶段1观测概率
-Prob_T1_Given_S1 = models.logit(V1_Map_S1, av1, CHOICE_T1)
+Prob_T1_Given_S1 = models.logit(V1_Map_S1, av1,  CHOICE_T1)
 Prob_T1_Given_S2 = models.logit(V1_Map_S2, av1, CHOICE_T1)
 
 # 阶段2观测概率
-Prob_T2_Given_S1 = models.logit(V2_Map_S1, av2, CHOICE_T2)
-Prob_T2_Given_S2 = models.logit(V2_Map_S2, av2, CHOICE_T2)
+Prob_T2_Given_S1 = exp(models.lognested(V2_Map_S1, av2, nests1, CHOICE_T2))
+Prob_T2_Given_S2 = exp(models.lognested(V2_Map_S2, av2, nests2, CHOICE_T2))
 
 # -----------------------------------------------------------------------------
 # 4.2 初始状态概率 P(State_1) - 使用MNL结构
@@ -540,12 +562,6 @@ print(f'输出文件: {results.data.htmlFileName}')
 # 写入LaTeX文件
 results.writeLaTeX()
 print(f'LaTeX文件: {results.data.latexFileName}')
-
-# 输出简要摘要
-print("\n" + "=" * 70)
-print("模型摘要")
-print("=" * 70)
-print(results.shortSummary())
 
 # 输出估计参数
 print("\n" + "=" * 70)
