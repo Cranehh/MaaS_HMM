@@ -376,7 +376,7 @@ V1_Map_S2 = {0: V1_NoMaaS_S2, 1: V1_MaaS_S2}
 # --- State 1 (Skeptic) Utilities ---
 V2_0_S1 = (ASC_Bus_S1 +
            B_Taxi12_S1 * taxi_12 +
-           B_PriceRatio_S1 * price_12 +
+        #    B_PriceRatio_S1 * price_12 +
            B_Price_S1 * price1 +
            B_WeekBus_S1 * week_bus +
            B_Ebike_S1 * e_bike +
@@ -388,7 +388,7 @@ V2_0_S1 = (ASC_Bus_S1 +
 V2_1_S1 = (
     # ASC_Metro_S1 +
            B_Taxi12_S1 * taxi_12 +
-           B_PriceRatio_S1 * price_12 +
+        #    B_PriceRatio_S1 * price_12 +
            B_Price_S1 * price2 +
            B_TravelDistWork_S1 * travel_distance_work +
            B_WeekMetro_S1 * week_metro +
@@ -401,7 +401,7 @@ V2_1_S1 = (
 
 V2_2_S1 = (
     # ASC_Taxi_S1 +
-           B_PriceRatio_S1 * price_3 +
+        #    B_PriceRatio_S1 * price_3 +
            B_Price_S1 * price3 +
            B_TravelDistWeekend_S1 * travel_distance_weekend +
            B_WeekTaxi_S1 * week_taxi +
@@ -410,7 +410,7 @@ V2_2_S1 = (
 
 V2_3_S1 = (
     # ASC_Ultra_S1 +
-           B_PriceRatio_S1 * price_4 +
+        #    B_PriceRatio_S1 * price_4 +
            B_Price_S1 * price4 +
            B_C6_S1 * c6 +
            B_Cost_S1 * cost +
@@ -418,7 +418,7 @@ V2_3_S1 = (
            B_Age3_S1 * age3)
 
 V2_4_S1 = (B_Cost_S1 * cost +
-           B_License_S1 * license +
+        #    B_License_S1 * license +
            B_HaveCar_S1 * have_car +
            B_Education_S1 * education)
 
@@ -427,7 +427,7 @@ V2_Map_S1 = {0: V2_0_S1, 1: V2_1_S1, 2: V2_2_S1, 3: V2_3_S1, 4: V2_4_S1}
 # --- State 2 (Enthusiast) Utilities ---
 V2_0_S2 = (ASC_Bus_S2 +
            B_Taxi12_S2 * taxi_12 +
-           B_PriceRatio_S2 * price_12 +
+        #    B_PriceRatio_S2 * price_12 +
            B_Price_S2 * price1 +
            B_WeekBus_S2 * week_bus +
            B_Ebike_S2 * e_bike +
@@ -439,7 +439,7 @@ V2_0_S2 = (ASC_Bus_S2 +
 V2_1_S2 = (
     # ASC_Metro_S2 +
            B_Taxi12_S2 * taxi_12 +
-           B_PriceRatio_S2 * price_12 +
+        #    B_PriceRatio_S2 * price_12 +
            B_Price_S2 * price2 +
            B_TravelDistWork_S2 * travel_distance_work +
            B_WeekMetro_S2 * week_metro +
@@ -452,7 +452,7 @@ V2_1_S2 = (
 
 V2_2_S2 = (
     # ASC_Taxi_S2 +
-           B_PriceRatio_S2 * price_3 +
+        #    B_PriceRatio_S2 * price_3 +
            B_Price_S2 * price3 +
            B_TravelDistWeekend_S2 * travel_distance_weekend +
            B_WeekTaxi_S2 * week_taxi +
@@ -461,7 +461,7 @@ V2_2_S2 = (
 
 V2_3_S2 = (
     # ASC_Ultra_S2 +
-           B_PriceRatio_S2 * price_4 +
+        #    B_PriceRatio_S2 * price_4 +
            B_Price_S2 * price4 +
            B_C6_S2 * c6 +
            B_Cost_S2 * cost +
@@ -469,7 +469,7 @@ V2_3_S2 = (
            B_Age3_S2 * age3)
 
 V2_4_S2 = (B_Cost_S2 * cost +
-           B_License_S2 * license +
+        #    B_License_S2 * license +
            B_HaveCar_S2 * have_car +
            B_Education_S2 * education)
 
