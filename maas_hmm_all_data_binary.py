@@ -283,9 +283,11 @@ ASC_Bus_S1 = Beta('ASC_Bus_S1', 0, None, None, 0)
 ASC_Metro_S1 = Beta('ASC_Metro_S1', 0, None, None, 0)
 ASC_Taxi_S1 = Beta('ASC_Taxi_S1', 0, None, None, 0)
 ASC_Ultra_S1 = Beta('ASC_Ultra_S1', 0, None, None, 0)
+ASC_Payg_S1 = Beta('ASC_Payg_S1', 0, None, None, 0)
 
 B_Taxi12_S1 = Beta('B_Taxi12_S1', 0, None, None, 0)
 B_Price_S1 = Beta('B_Price_S1', 0, None, None, 0)
+B_Price_S1_TU = Beta('B_Price_S1_TU', 0, None, None, 0)
 
 B_WeekBus_S1 = Beta('B_WeekBus_S1', 0, None, None, 0)
 B_Ebike_S1 = Beta('B_Ebike_S1', 0, None, None, 0)
@@ -312,6 +314,7 @@ ASC_Bus_S2 = Beta('ASC_Bus_S2', 0, None, None, 0)
 ASC_Metro_S2 = Beta('ASC_Metro_S2', 0, None, None, 0)
 ASC_Taxi_S2 = Beta('ASC_Taxi_S2', 0, None, None, 0)
 ASC_Ultra_S2 = Beta('ASC_Ultra_S2', 0, None, None, 0)
+ASC_Payg_S2 = Beta('ASC_Payg_S2', 0, None, None, 0)
 
 B_Taxi12_S2 = Beta('B_Taxi12_S2', 0, None, None, 0)
 B_PriceRatio_S2 = Beta('B_PriceRatio_S2', 0, None, None, 0)
@@ -386,7 +389,7 @@ V2_0_S1 = (ASC_Bus_S1 +
            B_Age4_S1 * age4)
 
 V2_1_S1 = (
-    # ASC_Metro_S1 +
+    ASC_Metro_S1 +
            B_Taxi12_S1 * taxi_12 +
         #    B_PriceRatio_S1 * price_12 +
            B_Price_S1 * price2 +
@@ -402,7 +405,7 @@ V2_1_S1 = (
 V2_2_S1 = (
     # ASC_Taxi_S1 +
         #    B_PriceRatio_S1 * price_3 +
-           B_Price_S1 * price3 +
+           B_Price_S1_TU * price3 +
            B_TravelDistWeekend_S1 * travel_distance_weekend +
            B_WeekTaxi_S1 * week_taxi +
            B_Age3_S1 * age3 +
@@ -411,15 +414,17 @@ V2_2_S1 = (
 V2_3_S1 = (
     # ASC_Ultra_S1 +
         #    B_PriceRatio_S1 * price_4 +
-           B_Price_S1 * price4 +
+           B_Price_S1_TU * price4 +
            B_C6_S1 * c6 +
            B_Cost_S1 * cost +
            B_WeekTaxi_S1 * week_taxi +
            B_Age3_S1 * age3)
 
-V2_4_S1 = (B_Cost_S1 * cost +
-        #    B_License_S1 * license +
-           B_HaveCar_S1 * have_car +
+V2_4_S1 = (
+        #    ASC_Payg_S1 +
+           B_Cost_S1 * cost +
+           B_License_S1 * license +
+        #    B_HaveCar_S1 * have_car +
            B_Education_S1 * education)
 
 V2_Map_S1 = {0: V2_0_S1, 1: V2_1_S1, 2: V2_2_S1, 3: V2_3_S1, 4: V2_4_S1}
@@ -437,7 +442,7 @@ V2_0_S2 = (ASC_Bus_S2 +
            B_Age4_S2 * age4)
 
 V2_1_S2 = (
-    # ASC_Metro_S2 +
+    ASC_Metro_S2 +
            B_Taxi12_S2 * taxi_12 +
         #    B_PriceRatio_S2 * price_12 +
            B_Price_S2 * price2 +
@@ -468,9 +473,11 @@ V2_3_S2 = (
            B_WeekTaxi_S2 * week_taxi +
            B_Age3_S2 * age3)
 
-V2_4_S2 = (B_Cost_S2 * cost +
-        #    B_License_S2 * license +
-           B_HaveCar_S2 * have_car +
+V2_4_S2 = (
+    # ASC_Payg_S2 +
+    B_Cost_S2 * cost +
+           B_License_S2 * license +
+        #    B_HaveCar_S2 * have_car +
            B_Education_S2 * education)
 
 V2_Map_S2 = {0: V2_0_S2, 1: V2_1_S2, 2: V2_2_S2, 3: V2_3_S2, 4: V2_4_S2}
