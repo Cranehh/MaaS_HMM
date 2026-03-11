@@ -500,7 +500,7 @@ Prob_T2_Given_S2 = models.logit(V2_Map_S2, av2, CHOICE_T2)
 
 # 初始状态概率 (17 params, 与v4相同)
 V_Init_S2 = (ASC_Init_S2 +
-             B_MaasFamiliar_Init * MaasFamiliar +
+            #  B_MaasFamiliar_Init * MaasFamiliar +
              B_Sex_Init * sex +
              B_Age2_Init * age2 +
              B_Age4_Init * age4 +
@@ -513,7 +513,7 @@ V_Init_S2 = (ASC_Init_S2 +
              B_WeekTaxi_Init * week_taxi +
              B_WeekEbike_Init * week_ebike +
              B_HaveCar_Init * have_car +
-             B_Ebike_Init * e_bike +
+            #  B_Ebike_Init * e_bike +
              B_D6_Init * d6 +
              B_F6_Init * f6)
 
@@ -526,7 +526,7 @@ Trans_Covariates = (G_TimeSavings * time_savings +
                     G_MatchBus * match_bus +
                     G_MatchMetro * match_metro +
                     G_MatchBike * match_bike +
-                    G_MatchEbike * match_e_bike +
+                    # G_MatchEbike * match_e_bike +
                     G_MatchTaxi * match_taxi +
                     G_MatchPrice * match_price +
                     G_PriceRatio * price_ratio
