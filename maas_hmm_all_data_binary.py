@@ -86,6 +86,9 @@ files = [
 dfs = [load_and_preprocess(f) for f in files]
 df_processed = pd.concat(dfs, ignore_index=True)
 
+df_scores = pd.read_csv('data/factor_scores.csv')
+df_processed = df_processed.merge(df_scores, on='peopleID')
+
 # --- 1:1 顺序配对 (可选) ---
 if USE_PAIRED:
     S1_LOS_COLS = ['M1ttimerail', 'M1triptime', 'M2ttime_rail', 'M2triptime',
@@ -204,6 +207,19 @@ match_e_bike = Variable('match_e_bike')
 match_taxi = Variable('match_taxi')
 match_price = Variable('match_price')
 price_ratio = Variable('price_ratio')
+
+FACTOR1 = Variable('FACTOR1')
+FACTOR2 = Variable('FACTOR2')
+FACTOR3 = Variable('FACTOR3')
+FACTOR4 = Variable('FACTOR4')
+FACTOR6 = Variable('FACTOR6')
+
+# FACTOR1 Init 效应参数
+B_FACTOR1_Init = Beta('B_FACTOR1_Init', 0, None, None, 0)
+B_FACTOR2_Init = Beta('B_FACTOR2_Init', 0, None, None, 0)
+B_FACTOR3_Init = Beta('B_FACTOR3_Init', 0, None, None, 0)
+B_FACTOR4_Init = Beta('B_FACTOR4_Init', 0, None, None, 0)
+B_FACTOR6_Init = Beta('B_FACTOR6_Init', 0, None, None, 0)
 
 # =============================================================================
 # 2. 参数定义 (Beta Parameters) - 冷启动: 所有初始值为0
@@ -515,7 +531,12 @@ V_Init_S2 = (ASC_Init_S2 +
              B_HaveCar_Init * have_car +
             #  B_Ebike_Init * e_bike +
              B_D6_Init * d6 +
-             B_F6_Init * f6)
+             B_F6_Init * f6 +
+             B_FACTOR1_Init * FACTOR1 +
+             B_FACTOR2_Init * FACTOR2 +
+             B_FACTOR3_Init * FACTOR3 +
+             B_FACTOR4_Init * FACTOR4 +
+             B_FACTOR6_Init * FACTOR6)
 
 Prob_Init_S1 = 1 / (1 + exp(V_Init_S2))
 Prob_Init_S2 = exp(V_Init_S2) / (1 + exp(V_Init_S2))
