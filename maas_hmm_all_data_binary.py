@@ -135,6 +135,10 @@ df_processed['CHOICE_T1_BIN'] = (df_processed['CHOICE_T1'] > 0).astype(int)
 # 聚合LOS变量: M1/M2/M3 平均轨道时间 (已还原为原始尺度)
 df_processed['avg_rail_time'] = df_processed[['M1ttimerail', 'M2ttime_rail', 'M3ttime_rail']].mean(axis=1)
 
+# 第一阶段平均节省时间和金钱
+df_processed['avg_time_savings'] = (df_processed['M1dif_triptime'] + df_processed['M2dif_triptime'] + df_processed['M3dif_triptime'] + df_processed['M4dif_triptime']) / 4
+df_processed['avg_cost_savings'] = (df_processed['M1dif_price'] + df_processed['M2dif_price'] + df_processed['M3dif_price'] + df_processed['M4dif_price']) / 4
+
 # 数据验证
 print("=" * 70)
 print("全数据模型验证 (AllData Binary) - raw scale")
@@ -164,6 +168,8 @@ first_pt = Variable('first_pt')
 distance5 = Variable('distance5')
 normal = Variable('normal')
 avg_rail_time = Variable('avg_rail_time')
+avg_cost_savings = Variable('avg_cost_savings')
+avg_time_savings = Variable('avg_time_savings')
 # 阶段2 LOS变量
 taxi_12 = Variable('taxi_12')
 price_12 = Variable('price_12')
@@ -281,6 +287,8 @@ B_FirstPT_S1 = Beta('B_FirstPT_S1', 0, None, None, 0)
 B_Distance5_S1 = Beta('B_Distance5_S1', 0, None, None, 0)
 B_Normal_S1 = Beta('B_Normal_S1', 0, None, None, 0)
 B_AvgRailTime_S1 = Beta('B_AvgRailTime_S1', 0, None, None, 0)
+B_AvgCostSavings_S1 = Beta('B_AvgCostSavings_S1', 0, None, None, 0)
+B_AvgTimeSavings_S1 = Beta('B_AvgTimeSavings_S1', 0, None, None, 0)
 
 # --- State 2 (Enthusiast) 阶段1参数 ---
 B_FirstTaxi_S2 = Beta('B_FirstTaxi_S2', 0, None, None, 0)
@@ -288,6 +296,8 @@ B_FirstPT_S2 = Beta('B_FirstPT_S2', 0, None, None, 0)
 B_Distance5_S2 = Beta('B_Distance5_S2', 0, None, None, 0)
 B_Normal_S2 = Beta('B_Normal_S2', 0, None, None, 0)
 B_AvgRailTime_S2 = Beta('B_AvgRailTime_S2', 0, None, None, 0)
+B_AvgCostSavings_S2 = Beta('B_AvgCostSavings_S2', 0, None, None, 0)
+B_AvgTimeSavings_S2 = Beta('B_AvgTimeSavings_S2', 0, None, None, 0)
 
 # -----------------------------------------------------------------------------
 # 2.4 阶段2效用参数 - 套餐订阅选择 (State-Specific) — 44 params
@@ -372,7 +382,9 @@ V1_MaaS_S1 = (ASC_MaaS_S1 +
               B_FirstTaxi_S1 * first_taxi +
               B_Normal_S1 * normal +
               B_Distance5_S1 * distance5 +
-              B_AvgRailTime_S1 * avg_rail_time)
+              B_AvgRailTime_S1 * avg_rail_time +
+              B_AvgCostSavings_S1 * avg_cost_savings +
+              B_AvgTimeSavings_S1 * avg_time_savings)
 
 V1_Map_S1 = {0: V1_NoMaaS_S1, 1: V1_MaaS_S1}
 
@@ -384,7 +396,9 @@ V1_MaaS_S2 = (ASC_MaaS_S2 +
               B_FirstTaxi_S2 * first_taxi +
               B_Normal_S2 * normal +
               B_Distance5_S2 * distance5 +
-              B_AvgRailTime_S2 * avg_rail_time)
+              B_AvgRailTime_S2 * avg_rail_time +
+              B_AvgCostSavings_S2 * avg_cost_savings +
+              B_AvgTimeSavings_S2 * avg_time_savings)
 
 V1_Map_S2 = {0: V1_NoMaaS_S2, 1: V1_MaaS_S2}
 
